@@ -81,7 +81,25 @@
                     "name": "Sprint",
                     "type": "Button",
                     "id": "641cd816-40e6-41b4-8c3d-04687c349290",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MouseUp",
+                    "type": "Button",
+                    "id": "2b91b566-0aa5-485a-a141-b10abcc2e788",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MouseDown",
+                    "type": "Button",
+                    "id": "389b4838-6d2a-46bc-8c1a-0706f6de830c",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -470,6 +488,28 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4dc1900e-f211-4145-920d-28cbc4a2c1c4",
+                    "path": "<Mouse>/{Cancel}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MouseUp",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "83b39138-5a27-422a-9d8a-9c965113454b",
+                    "path": "<Mouse>/{Forward}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MouseDown",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

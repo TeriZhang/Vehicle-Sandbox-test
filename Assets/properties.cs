@@ -3,5 +3,5 @@ using UnityEngine;
 
 public class properties : MonoBehaviour
 {
-    public List<Vector3> AttachPoints = new List<Vector3>();
+    public List<AttachPoint> AttachPoints = new List<AttachPoint>();
 }
