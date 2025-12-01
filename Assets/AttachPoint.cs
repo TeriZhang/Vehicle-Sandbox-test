@@ -1,11 +1,13 @@
+using System;
 using UnityEngine;
 
+[System.Serializable]
 public class AttachPoint
 {
     public GameObject Parent;
     public Vector3 offset;
     public float rotation;
-    public bool occupied;
+    public GameObject occupied;
 
     public AttachPoint()
     {

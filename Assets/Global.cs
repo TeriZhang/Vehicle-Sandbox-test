@@ -14,16 +14,20 @@ using UnityEngine.UI;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 using Quaternion = UnityEngine.Quaternion;
+using UnityEditor.U2D.Aseprite;
+using Unity.Mathematics;
 
 public class Global : MonoBehaviour
 {
-    public GameObject Root;
-    public GameObject topPart;
 
     public GameObject World;
-    public List<GameObject> listOfParts;
-
     public string gameState = "Building";
+
+
+    public Assembly assembly;
+    AttachPoint closestAttachPoint;
+    GameObject closestPart;
+
 
     public string userActionState = "Idle"; // Build, Remove, Idle
 
@@ -33,150 +37,254 @@ public class Global : MonoBehaviour
 
     public GameObject BuildingUI;
 
-    public GameObject BlockButton;
+    public List<string> Inventory; // "What the player can build with" represented as a list of part names.
 
-    AttachPoint closestAttachPoint;
-    GameObject closestPart;
-
-    void freeze(GameObject part, bool f)
+    /// <summary>
+    /// Completely freezes a part's RigidBody
+    /// </summary>
+    /// <param name="part"></param>
+    /// <param name="freezeState"></param>
+    void Freeze(GameObject part, bool freezeState)
     {
-        if (f)
+        if (freezeState)
             part.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
         else
             part.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
     }
 
-    GameObject newRoot()
+    /// <summary>
+    /// Creates a root for the assembly (need to figure out how to put this function in the Assembly class)
+    /// </summary>
+    /// <returns></returns>
+    GameObject createRoot()
     {
-        GameObject temp = Instantiate(Resources.Load<GameObject>("Parts/Block"), transform);
-        temp.GetComponent<SpriteRenderer>().color = Color.pink;
+        GameObject temp = Instantiate(Resources.Load<GameObject>("Parts/Engine"), transform);
         temp.name = "Root";
         temp.transform.position = new Vector2(0, 2);
+        temp.transform.parent = World.transform;
 
-        listOfParts.Add(temp);
+        Freeze(temp, true);
+
+        assembly.AddRoot(temp);
         return temp;
     }
     public GameObject newPart(string name, GameObject weldParent, AttachPoint attachPoint)
     {
-        GameObject temp = Instantiate(Resources.Load<GameObject>("Parts/Block"), transform);
-        temp.name = "Block";
+        GameObject temp = Instantiate(Resources.Load<GameObject>("Parts/" + name), transform);
+        temp.name = name;
         Destroy(temp.GetComponent<Rigidbody2D>());
         temp.transform.position = weldParent.transform.position + attachPoint.offset;
-        temp.transform.rotation = new Quaternion(); // 
+        temp.transform.rotation = Quaternion.Euler(new Vector3(0, 0, attachPoint.rotation));
         temp.transform.parent = weldParent.transform;
+        attachPoint.occupied = temp;
 
         Rigidbody2D rb = temp.GetComponent<Rigidbody2D>();
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
 
-        listOfParts.Add(temp);
+        assembly.Add(temp);
 
         return temp;
     }
-    void CreateVehicle()
+    void newVehicle()
     {
-        Root = newRoot();
+        assembly = new Assembly();
+        assembly.root = createRoot();
 
-        newPart("Block", Root, new AttachPoint(-1, 0));
-        newPart("Block", Root, new AttachPoint(0, 1));
-        topPart = newPart("Block", Root, new AttachPoint(1, 0));
+        // construct a template vehicle
+        // GameObject Root = assembly.root;
+        // newPart("Block", Root, new AttachPoint(-1, 0));
+        // newPart("Block", Root, new AttachPoint(0, 1));
+        // GameObject topPart = newPart("Block", Root, new AttachPoint(1, 0));
 
-        GameObject topBPart = newPart("Block", topPart, new AttachPoint(1, 0));
-        newPart("Block", topBPart, new AttachPoint(1, 0));
-        newPart("Block", topBPart, new AttachPoint(0, 1));
+        // GameObject topBPart = newPart("Block", topPart, new AttachPoint(1, 0));
+        // newPart("Block", topBPart, new AttachPoint(1, 0));
+        // newPart("Block", topBPart, new AttachPoint(0, 1));
     }
+
 
     Vector2 getMousePos()
     {
         return Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
     }
 
+    /// <summary>
+    /// updates 'closestPart' and 'closestAttachPoint' relative to the mouse.
+    /// used to snap to an attachment point on the body.
+    /// </summary>
     void getSnap()
     {
-        //snap to an attachment point on the body with the mouse.
         Vector3 mousePos = getMousePos();
         double distance;
         double closestDist = int.MaxValue;
         closestPart = null;
 
-        foreach (GameObject Part in listOfParts)
+        //TASK: add a constraint that doesn't allow a part to overlap other parts
+
+        foreach (GameObject Part in assembly.cachedParts)
         {
             foreach (AttachPoint AttachPoint in Part.GetComponent<properties>().AttachPoints)
             {
-                distance = (mousePos - (AttachPoint.offset + Part.transform.position)).magnitude;
-                if (distance < 1 && distance < closestDist) // distance constraint: distance < 3 &&
+                if (!AttachPoint.occupied)
                 {
-                    Debug.Log(distance);
-                    closestDist = distance;
-                    closestAttachPoint = AttachPoint;
-                    closestPart = Part;
+                    distance = (mousePos - (AttachPoint.offset + Part.transform.position)).magnitude;
+                    if (distance < 1 && distance < closestDist)
+                    {
+                        closestDist = distance;
+                        closestAttachPoint = AttachPoint;
+                        closestPart = Part;
+                    }
                 }
             }
         }
     }
     
-    void SelectPart(string PartName)
+    // used with the buttons in the inventory.
+    public void SelectPart(string PartName)
     {
-        userActionState = "Build";
-        SelectedPart = PartName;
-        ghostPart = Instantiate(Resources.Load<GameObject>("Parts/" + PartName));
-        ghostPart.transform.parent = World.transform;
-
-        SpriteRenderer sr = ghostPart.GetComponent<SpriteRenderer>();
-        sr.color = new Color(sr.color.r, sr.color.g, sr.color.b, 0.5f);
-
-        Rigidbody2D rb = ghostPart.GetComponent<Rigidbody2D>();
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-        ghostPart.GetComponent<Collider2D>().enabled = false;
-
-    }
-
-    public void onLeftMouseDown(InputAction.CallbackContext ctx)
-    {
-        Debug.Log("place_hit");
-        if (ctx.performed && userActionState == "Build" && closestPart)
+        if (gameState == "Building")
         {
-            Debug.Log("place_activate");
-            userActionState = "Idle";
-            Destroy(ghostPart);
-            newPart("Block", closestPart, closestAttachPoint);
+            userActionState = "Build";
+            SelectedPart = PartName;
+            ghostPart = Instantiate(Resources.Load<GameObject>("Parts/" + PartName));
+            ghostPart.transform.parent = World.transform;
+
+            SpriteRenderer sr = ghostPart.GetComponent<SpriteRenderer>();
+            sr.color = new Color(sr.color.r, sr.color.g, sr.color.b, 0.5f);
+
+            Rigidbody2D rb = ghostPart.GetComponent<Rigidbody2D>();
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            ghostPart.GetComponent<Collider2D>().enabled = false;
         }
     }
+
+    // side menu button
+    public void RemoveButtonPress()
+    {
+        if (gameState == "Building")
+        {
+            userActionState = "Remove";
+            Debug.Log(userActionState);
+        }
+    }
+
+    // side menu button
+    public void CombatButtonPress()
+    {
+        Debug.Log("dededede");
+        switch (gameState)
+        {
+            case "Building":
+                gameState = "Combat";
+                Freeze(assembly.root, false);
+                assembly.rb.AddForce(new Vector2(0, -100));
+                break;
+            case "Combat":
+                gameState = "Building";
+                assembly.root.transform.position = new Vector3(0, 2, 0);
+                assembly.root.transform.rotation = new Quaternion(0, 0, 0, 1);
+                Freeze(assembly.root, true);
+                break;
+
+        }
+    }
+
+    //currently used to add parts and remove parts
+    public void onLeftMouseDown(InputAction.CallbackContext ctx)
+    {
+        // Debug.Log("place_hit");
+        if (ctx.performed &&  gameState == "Building")
+        {
+        switch (userActionState)
+        {
+            case "Build":
+                if (closestPart)
+                {
+                    // Debug.Log("place_activate");
+                    userActionState = "Idle";
+                    Destroy(ghostPart);
+                    newPart(SelectedPart, closestPart, closestAttachPoint);
+                }
+                break;
+
+            case "Remove":
+                getSnap(); // TASK: change this to check for closest part, not attach point.
+                if (closestPart && closestPart != assembly.root)
+                {
+                    userActionState = "Idle";
+                    closestAttachPoint.occupied = null;
+                    assembly.Remove(closestPart);
+                    Destroy(closestPart);
+                }
+                break;
+        }
+        }
+    }
+
     public void onLeftMouseUp(InputAction.CallbackContext ctx)
     {
     }
 
     void Start()
     {
-        CreateVehicle();
+        newVehicle();
 
-        Rigidbody2D rb = Root.GetComponent<Rigidbody2D>();
+        Inventory = new List<string>();
 
-        //add force to vehicle
-        rb.AddForce(new Vector2(100, 0));
-        rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        Inventory.Add("Block");
+        Inventory.Add("AngledBlock");
+        Inventory.Add("Wheel");
+        Inventory.Add("Spike");
+        Inventory.Add("HugeWheel");
 
-        //Building system. Build parts onto attachment points, delete parts, adjusting parts.
+        //Creates the buttons in the inventory UI.
+        for (int i = 0; i < Inventory.Count; i++)
+        {
+            string PartName = Inventory[i];
+            GameObject Button = Instantiate(Resources.Load<GameObject>("UI/PartButton"));
 
-        BlockButton.GetComponent<Button>().onClick.AddListener(() => SelectPart("Block"));
+            Button.transform.SetParent(BuildingUI.transform.Find("Panel").transform);
+            Button.GetComponent<RectTransform>().anchoredPosition = new Vector2(-240 + 60 * i, 20);
+            Button.GetComponent<Image>().sprite = Resources.Load<Sprite>("Graphics/" + PartName);
+
+            Button.GetComponent<Button>().onClick.AddListener(() => SelectPart(PartName));
+        }
     }
+
     void Update()
     {
-        switch (userActionState)
+        
+        switch (gameState)
         {
-            case "Idle":
-                break;
-            case "Build":
-                getSnap();
-                if (closestPart)
+            case "Building":
+                switch (userActionState)
                 {
-                    ghostPart.transform.position = closestPart.transform.position + closestAttachPoint.offset;
-                }
-                else
-                {
-                    ghostPart.transform.position = getMousePos();
+                    case "Idle":
+                        break;
+                    case "Build":
+                        // when the player drags ghost parts onto the assembly
+                        getSnap();
+                        if (ghostPart)
+                        {
+                            if (closestPart)
+                            {
+                                ghostPart.transform.position = closestPart.transform.position + closestAttachPoint.offset;
+                                ghostPart.transform.rotation = Quaternion.Euler(new Vector3(0, 0, closestAttachPoint.rotation));
+                            }
+                            else
+                            {
+                                ghostPart.transform.position = getMousePos();
+                            }
+                        }
+                        break;
                 }
                 break;
-            case "Remove":
+            
+            case "Combat":
+                // allows player control of the vehicle(assembly) in combat
+                assembly.rb.AddForce(new Vector3(
+                    Input.GetAxis("Horizontal") * 5, 
+                    Input.GetAxis("Vertical") * 5, 
+                    0));
                 break;
         }
     }

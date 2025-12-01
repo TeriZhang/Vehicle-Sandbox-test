@@ -505,7 +505,7 @@
                 {
                     "name": "",
                     "id": "83b39138-5a27-422a-9d8a-9c965113454b",
-                    "path": "<Mouse>/{Forward}",
+                    "path": "<Mouse>/leftButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
