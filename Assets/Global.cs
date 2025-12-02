@@ -137,12 +137,37 @@ public class Global : MonoBehaviour
             }
         }
     }
+
+    GameObject nearestPart()
+    {
+        Vector3 mousePos = getMousePos();
+        double distance;
+        double closestDist = int.MaxValue;
+        GameObject nearest = null;
+
+        //TASK: add a constraint that doesn't allow a part to overlap other parts
+
+        foreach (GameObject Part in assembly.cachedParts)
+        {
+            distance = (mousePos - Part.transform.position).magnitude;
+            if (distance < 1 && distance < closestDist)
+            {
+                closestDist = distance;
+                nearest = Part;
+            }
+        }
+        return nearest;
+    }
     
     // used with the buttons in the inventory.
     public void SelectPart(string PartName)
     {
         if (gameState == "Building")
         {
+            if (ghostPart)
+            {
+                Destroy(ghostPart);
+            }
             userActionState = "Build";
             SelectedPart = PartName;
             ghostPart = Instantiate(Resources.Load<GameObject>("Parts/" + PartName));
@@ -170,7 +195,6 @@ public class Global : MonoBehaviour
     // side menu button
     public void CombatButtonPress()
     {
-        Debug.Log("dededede");
         switch (gameState)
         {
             case "Building":
@@ -188,7 +212,33 @@ public class Global : MonoBehaviour
         }
     }
 
-    //currently used to add parts and remove parts
+    // side menu button
+    public void KeybindButtonPress()
+    {
+        if (gameState == "Building")
+        {
+            userActionState = "Keybind";
+        }
+    }
+
+    // side menu button
+    public void RotateButtonPress()
+    {
+        if (gameState == "Building")
+        {
+            userActionState = "Rotate";
+        }
+    }
+    // side menu button
+    public void OffButtonPress()
+    {
+        if (gameState == "Building")
+        {
+            userActionState = "Idle";
+        }
+    }
+
+    //currently used to add parts, remove parts, and adjust parts.
     public void onLeftMouseDown(InputAction.CallbackContext ctx)
     {
         // Debug.Log("place_hit");
@@ -214,6 +264,24 @@ public class Global : MonoBehaviour
                     closestAttachPoint.occupied = null;
                     assembly.Remove(closestPart);
                     Destroy(closestPart);
+                }
+                break;
+            case "Keybind":
+                GameObject selected = nearestPart();
+                if (selected)
+                {
+                    properties props = selected.GetComponent<properties>();
+                    if (props.Category == "Control")
+                    {
+                        // props.Control_Keybinds = ; // has to wait for Update()
+                    }
+                }
+                break;
+
+            case "Rotate":
+                if (nearestPart())
+                {
+                    nearestPart().transform.rotation *= Quaternion.Euler(new Vector3(0, 0, 90));
                 }
                 break;
         }

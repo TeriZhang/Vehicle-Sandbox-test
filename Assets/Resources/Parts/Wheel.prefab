@@ -130,6 +130,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AttachPoints: []
+  Control_Keybinds: 
+  Damage: 0
+  Speed: 5
 --- !u!58 &987766467074819369
 CircleCollider2D:
   m_ObjectHideFlags: 0

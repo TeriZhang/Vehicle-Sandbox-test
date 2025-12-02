@@ -176,3 +176,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AttachPoints: []
+  Control_Keybinds: 
+  Damage: 30
+  Speed: 0
