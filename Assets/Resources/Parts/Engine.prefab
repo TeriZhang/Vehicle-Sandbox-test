@@ -175,6 +175,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab6428980463b64f88bd40ff5c24f39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Category: 
   AttachPoints:
   - Parent: {fileID: 0}
     offset: {x: 0, y: 1, z: 0}
@@ -192,3 +193,7 @@ MonoBehaviour:
     offset: {x: -1, y: 0, z: 0}
     rotation: 0
     occupied: {fileID: 0}
+  Control_Keybinds: 
+  Damage: 0
+  Health: 250
+  Speed: 0

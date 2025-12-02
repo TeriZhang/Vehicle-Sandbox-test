@@ -175,7 +175,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab6428980463b64f88bd40ff5c24f39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Category: 
   AttachPoints: []
   Control_Keybinds: 
   Damage: 30
+  Health: 100
   Speed: 0

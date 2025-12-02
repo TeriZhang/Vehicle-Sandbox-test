@@ -21,6 +21,7 @@ public class Global : MonoBehaviour
 {
 
     public GameObject World;
+    public Camera mainCamera;
     public string gameState = "Building";
 
 
@@ -36,6 +37,8 @@ public class Global : MonoBehaviour
     public GameObject ghostPart;
 
     public GameObject BuildingUI;
+
+    public bool CameraSyncToVehicle;
 
     public List<string> Inventory; // "What the player can build with" represented as a list of part names.
 
@@ -201,12 +204,15 @@ public class Global : MonoBehaviour
                 gameState = "Combat";
                 Freeze(assembly.root, false);
                 assembly.rb.AddForce(new Vector2(0, -100));
+                CameraSyncToVehicle = true;
                 break;
             case "Combat":
                 gameState = "Building";
                 assembly.root.transform.position = new Vector3(0, 2, 0);
                 assembly.root.transform.rotation = new Quaternion(0, 0, 0, 1);
+                CameraSyncToVehicle = false;
                 Freeze(assembly.root, true);
+                mainCamera.transform.position = new Vector3(0, 2, -10);
                 break;
 
         }
@@ -353,6 +359,10 @@ public class Global : MonoBehaviour
                     Input.GetAxis("Horizontal") * 5, 
                     Input.GetAxis("Vertical") * 5, 
                     0));
+                if (CameraSyncToVehicle)
+                {
+                    mainCamera.transform.position = new Vector3(assembly.root.transform.position.x, assembly.root.transform.position.y, -10);
+                }
                 break;
         }
     }

@@ -7,5 +7,6 @@ public class properties : MonoBehaviour
     public List<AttachPoint> AttachPoints = new List<AttachPoint>();
     public List<KeyCode> Control_Keybinds = new List<KeyCode>();
     public int Damage;
+    public int Health;
     public int Speed;
 }
