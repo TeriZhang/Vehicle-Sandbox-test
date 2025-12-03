@@ -19,10 +19,9 @@ using Unity.Mathematics;
 
 public class Global : MonoBehaviour
 {
-
     public GameObject World;
-    public Camera mainCamera;
-    public string gameState = "Building";
+        public Camera mainCamera;
+    public string gameState = "Building"; // Building Combat
 
 
     public Assembly assembly;
@@ -71,13 +70,15 @@ public class Global : MonoBehaviour
         assembly.AddRoot(temp);
         return temp;
     }
+
     public GameObject newPart(string name, GameObject weldParent, AttachPoint attachPoint)
     {
         GameObject temp = Instantiate(Resources.Load<GameObject>("Parts/" + name), transform);
         temp.name = name;
         Destroy(temp.GetComponent<Rigidbody2D>());
-        temp.transform.position = weldParent.transform.position + attachPoint.offset;
-        temp.transform.rotation = Quaternion.Euler(new Vector3(0, 0, attachPoint.rotation));
+        temp.transform.position = weldParent.transform.position + (weldParent.transform.rotation * attachPoint.offset);
+        temp.GetComponent<properties>().ParentAttachpoint = attachPoint;
+        temp.transform.rotation = Quaternion.Euler(new Vector3(0, 0, attachPoint.rotation + weldParent.transform.rotation.eulerAngles.z));
         temp.transform.parent = weldParent.transform;
         attachPoint.occupied = temp;
 
@@ -191,7 +192,6 @@ public class Global : MonoBehaviour
         if (gameState == "Building")
         {
             userActionState = "Remove";
-            Debug.Log(userActionState);
         }
     }
 
@@ -205,6 +205,7 @@ public class Global : MonoBehaviour
                 Freeze(assembly.root, false);
                 assembly.rb.AddForce(new Vector2(0, -100));
                 CameraSyncToVehicle = true;
+                // new Transform().Rotate(0, 90, 0, Space.World);
                 break;
             case "Combat":
                 gameState = "Building";
@@ -250,47 +251,50 @@ public class Global : MonoBehaviour
         // Debug.Log("place_hit");
         if (ctx.performed &&  gameState == "Building")
         {
-        switch (userActionState)
-        {
-            case "Build":
-                if (closestPart)
-                {
-                    // Debug.Log("place_activate");
-                    userActionState = "Idle";
-                    Destroy(ghostPart);
-                    newPart(SelectedPart, closestPart, closestAttachPoint);
-                }
-                break;
-
-            case "Remove":
-                getSnap(); // TASK: change this to check for closest part, not attach point.
-                if (closestPart && closestPart != assembly.root)
-                {
-                    userActionState = "Idle";
-                    closestAttachPoint.occupied = null;
-                    assembly.Remove(closestPart);
-                    Destroy(closestPart);
-                }
-                break;
-            case "Keybind":
-                GameObject selected = nearestPart();
-                if (selected)
-                {
-                    properties props = selected.GetComponent<properties>();
-                    if (props.Category == "Control")
+            GameObject selected;
+            properties props;
+            switch (userActionState)
+            {
+                case "Build":
+                    if (closestPart)
                     {
-                        // props.Control_Keybinds = ; // has to wait for Update()
+                        // Debug.Log("place_activate");
+                        userActionState = "Idle";
+                        Destroy(ghostPart);
+                        closestAttachPoint.occupied = newPart(SelectedPart, closestPart, closestAttachPoint);
                     }
-                }
-                break;
+                    break;
 
-            case "Rotate":
-                if (nearestPart())
-                {
-                    nearestPart().transform.rotation *= Quaternion.Euler(new Vector3(0, 0, 90));
-                }
-                break;
-        }
+                case "Remove":
+                    selected = nearestPart();
+                    if (selected && selected != assembly.root)
+                    {
+                        props = selected.GetComponent<properties>();
+                        userActionState = "Idle";
+                        props.ParentAttachpoint.occupied = null;
+                        assembly.Remove(selected);
+                        Destroy(selected);
+                    }
+                    break;
+                case "Keybind":
+                    selected = nearestPart();
+                    if (selected)
+                    {
+                        props = selected.GetComponent<properties>();
+                        if (props.Category == "Control")
+                        {
+                            // props.Control_Keybinds = ; // has to wait for Update()
+                        }
+                    }
+                    break;
+
+                case "Rotate":
+                    if (nearestPart())
+                    {
+                        nearestPart().transform.rotation *= Quaternion.Euler(new Vector3(0, 0, 90));
+                    }
+                    break;
+            }
         }
     }
 
@@ -326,7 +330,6 @@ public class Global : MonoBehaviour
 
     void Update()
     {
-        
         switch (gameState)
         {
             case "Building":
@@ -341,8 +344,8 @@ public class Global : MonoBehaviour
                         {
                             if (closestPart)
                             {
-                                ghostPart.transform.position = closestPart.transform.position + closestAttachPoint.offset;
-                                ghostPart.transform.rotation = Quaternion.Euler(new Vector3(0, 0, closestAttachPoint.rotation));
+                                ghostPart.transform.position = closestPart.transform.position + (closestPart.transform.rotation * closestAttachPoint.offset);
+                                ghostPart.transform.rotation = Quaternion.Euler(new Vector3(0, 0, closestAttachPoint.rotation + closestPart.transform.rotation.eulerAngles.z));
                             }
                             else
                             {

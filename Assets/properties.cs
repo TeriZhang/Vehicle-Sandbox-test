@@ -4,6 +4,7 @@ using UnityEngine;
 public class properties : MonoBehaviour
 {   
     public string Category;
+    public AttachPoint ParentAttachpoint;
     public List<AttachPoint> AttachPoints = new List<AttachPoint>();
     public List<KeyCode> Control_Keybinds = new List<KeyCode>();
     public int Damage;
