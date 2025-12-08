@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class properties : MonoBehaviour
 {   
@@ -10,4 +11,19 @@ public class properties : MonoBehaviour
     public int Damage;
     public int Health;
     public int Speed;
+
+    /// <summary>
+    /// reference to the GameObject.
+    /// </summary>
+    public GameObject Object;
+
+    public Vector2 PivotOffset;
+    
+    public string PartType;
+    public HingeJoint2D HingeRef;
+
+    public Vector3 getPosition()
+    {
+        return PivotOffset;
+    }
 }

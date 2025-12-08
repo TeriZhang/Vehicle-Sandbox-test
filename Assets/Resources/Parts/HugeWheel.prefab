@@ -130,11 +130,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Category: 
+  ParentAttachpoint:
+    Parent: {fileID: 0}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: 0
+    occupied: {fileID: 0}
   AttachPoints: []
   Control_Keybinds: 
   Damage: 0
   Health: 150
   Speed: 10
+  Object: {fileID: 0}
+  PivotOffset: {x: 0, y: 0}
 --- !u!58 &987766467074819369
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -145,7 +152,7 @@ CircleCollider2D:
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 71fb127559628d64aacba7c8d5c416b7, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

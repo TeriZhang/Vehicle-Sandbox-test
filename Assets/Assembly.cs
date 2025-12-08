@@ -20,7 +20,7 @@ using Unity.Mathematics;
 public class Assembly 
 {
     
-    public List<GameObject> cachedParts;
+    public List<GameObject> PartList;
     
 
     public GameObject root;
@@ -28,12 +28,12 @@ public class Assembly
 
     public Assembly()
     {
-        cachedParts = new List<GameObject>();
+        PartList = new List<GameObject>();
     }
 
     public void Add(GameObject PartP)
     {
-        cachedParts.Add(PartP);
+        PartList.Add(PartP);
     }
     // GameObject createRoot()
     // {
@@ -63,6 +63,6 @@ public class Assembly
     }
     public void Remove(GameObject PartP)
     {
-        cachedParts.Remove(PartP);
+        PartList.Remove(PartP);
     }
 }

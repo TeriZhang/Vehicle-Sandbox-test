@@ -16,6 +16,8 @@ using Vector3 = UnityEngine.Vector3;
 using Quaternion = UnityEngine.Quaternion;
 using UnityEditor.U2D.Aseprite;
 using Unity.Mathematics;
+using Unity.Properties;
+using System.ComponentModel.Design;
 
 public class Global : MonoBehaviour
 {
@@ -40,6 +42,10 @@ public class Global : MonoBehaviour
     public bool CameraSyncToVehicle;
 
     public List<string> Inventory; // "What the player can build with" represented as a list of part names.
+
+    public bool Keybind_CheckInput = false;
+
+    public GameObject selected;
 
     /// <summary>
     /// Completely freezes a part's RigidBody
@@ -74,16 +80,40 @@ public class Global : MonoBehaviour
     public GameObject newPart(string name, GameObject weldParent, AttachPoint attachPoint)
     {
         GameObject temp = Instantiate(Resources.Load<GameObject>("Parts/" + name), transform);
-        temp.name = name;
-        Destroy(temp.GetComponent<Rigidbody2D>());
+        temp.name = name + " " + assembly.PartList.Count;
         temp.transform.position = weldParent.transform.position + (weldParent.transform.rotation * attachPoint.offset);
         temp.GetComponent<properties>().ParentAttachpoint = attachPoint;
         temp.transform.rotation = Quaternion.Euler(new Vector3(0, 0, attachPoint.rotation + weldParent.transform.rotation.eulerAngles.z));
         temp.transform.parent = weldParent.transform;
         attachPoint.occupied = temp;
+        
+        properties props = temp.GetComponent<properties>();
 
-        Rigidbody2D rb = temp.GetComponent<Rigidbody2D>();
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        switch (props.PartType)
+        { 
+            case "Wheel":
+                //first destroy the previous Hinge Joint.
+                Destroy(temp.GetComponent<HingeJoint2D>());
+                Destroy(temp.GetComponent<Rigidbody2D>());
+
+
+                //Create new
+                HingeJoint2D HingeJoint = assembly.root.AddComponent<HingeJoint2D>();
+                HingeJoint.useMotor = true;
+                JointMotor2D motor = HingeJoint.motor;
+                motor.motorSpeed = 0;
+                motor.maxMotorTorque = 3000;
+                HingeJoint.motor = motor;
+                HingeJoint.connectedBody = temp.transform.Find("Tire").gameObject.GetComponent<Rigidbody2D>();
+
+                props.HingeRef = HingeJoint;
+
+                break;
+        }
+        Destroy(temp.GetComponent<Rigidbody2D>());
+
+        // Rigidbody2D rb = temp.GetComponent<Rigidbody2D>();
+        // rb.constraints = RigidbodyConstraints2D.FreezeRotation;
 
         assembly.Add(temp);
 
@@ -96,13 +126,9 @@ public class Global : MonoBehaviour
 
         // construct a template vehicle
         // GameObject Root = assembly.root;
-        // newPart("Block", Root, new AttachPoint(-1, 0));
-        // newPart("Block", Root, new AttachPoint(0, 1));
-        // GameObject topPart = newPart("Block", Root, new AttachPoint(1, 0));
-
-        // GameObject topBPart = newPart("Block", topPart, new AttachPoint(1, 0));
-        // newPart("Block", topBPart, new AttachPoint(1, 0));
-        // newPart("Block", topBPart, new AttachPoint(0, 1));
+        // newPart("Block", Root, Root.GetComponent<properties>().AttachPoints[3]);
+        // GameObject topPart = newPart("Block", Root, Root.GetComponent<properties>().AttachPoints[1]);
+        // newPart("Block", topPart, topPart.GetComponent<properties>().AttachPoints[1]);
     }
 
 
@@ -123,9 +149,17 @@ public class Global : MonoBehaviour
         closestPart = null;
 
         //TASK: add a constraint that doesn't allow a part to overlap other parts
-
-        foreach (GameObject Part in assembly.cachedParts)
+        
+        // Console.WriteLine("Hi Console");
+        // Debug.Log("Hi Debug");
+        // foreach (GameObject Part in assembly.PartList)
+        // {
+        //     Debug.Log(Part);
+        // }
+        // Debug.Log("---");
+        foreach (GameObject Part in assembly.PartList)
         {
+            if (!Part) {continue;}
             foreach (AttachPoint AttachPoint in Part.GetComponent<properties>().AttachPoints)
             {
                 if (!AttachPoint.occupied)
@@ -151,8 +185,9 @@ public class Global : MonoBehaviour
 
         //TASK: add a constraint that doesn't allow a part to overlap other parts
 
-        foreach (GameObject Part in assembly.cachedParts)
+        foreach (GameObject Part in assembly.PartList)
         {
+            if (!Part) {continue;}
             distance = (mousePos - Part.transform.position).magnitude;
             if (distance < 1 && distance < closestDist)
             {
@@ -162,6 +197,33 @@ public class Global : MonoBehaviour
         }
         return nearest;
     }
+
+    // functions
+
+    public GameObject getPhysical(GameObject PartP) // for HugeWheel bug. decided not to use for now.
+    {
+        return PartP.transform.Find("Physical").gameObject;
+    }
+
+    int removeiterate_iterations;
+    public void removeIterate(GameObject PartP)
+    {
+        properties props = PartP.GetComponent<properties>();
+        foreach (AttachPoint attachPoint in props.AttachPoints)
+        {
+            removeiterate_iterations++;
+            if (removeiterate_iterations > assembly.PartList.Count) {break;}
+
+            if (attachPoint.occupied)
+            {
+                removeIterate(attachPoint.occupied);
+            }
+        }
+        assembly.Remove(PartP);
+        props.ParentAttachpoint.occupied = null;
+        Destroy(PartP);
+    }
+
     
     // used with the buttons in the inventory.
     public void SelectPart(string PartName)
@@ -185,6 +247,8 @@ public class Global : MonoBehaviour
             ghostPart.GetComponent<Collider2D>().enabled = false;
         }
     }
+
+
 
     // side menu button
     public void RemoveButtonPress()
@@ -251,7 +315,7 @@ public class Global : MonoBehaviour
         // Debug.Log("place_hit");
         if (ctx.performed &&  gameState == "Building")
         {
-            GameObject selected;
+            
             properties props;
             switch (userActionState)
             {
@@ -272,8 +336,10 @@ public class Global : MonoBehaviour
                         props = selected.GetComponent<properties>();
                         userActionState = "Idle";
                         props.ParentAttachpoint.occupied = null;
-                        assembly.Remove(selected);
-                        Destroy(selected);
+
+                        // List<GameObject> temp = new List<GameObject>();
+
+                        removeIterate(selected);
                     }
                     break;
                 case "Keybind":
@@ -284,6 +350,8 @@ public class Global : MonoBehaviour
                         if (props.Category == "Control")
                         {
                             // props.Control_Keybinds = ; // has to wait for Update()
+
+                            Keybind_CheckInput = true;
                         }
                     }
                     break;
@@ -353,15 +421,63 @@ public class Global : MonoBehaviour
                             }
                         }
                         break;
+                    case "Keybind":
+                        if (Keybind_CheckInput)
+                        {
+                            if (Input.anyKeyDown)
+                            {
+                                foreach(KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
+                                {
+                                    if (Input.GetKeyDown(key))
+                                    {
+                                        properties props = selected.GetComponent<properties>();
+                                        if (props.PartType == "Wheel")
+                                        selected.GetComponent<properties>().Control_Keybinds[0] = key;
+                                        Keybind_CheckInput = false;
+                                        Debug.Log("Keybind set: " + key);
+                                    }
+                                }
+                            }
+                        }
+                        break;
                 }
                 break;
             
             case "Combat":
                 // allows player control of the vehicle(assembly) in combat
-                assembly.rb.AddForce(new Vector3(
-                    Input.GetAxis("Horizontal") * 5, 
-                    Input.GetAxis("Vertical") * 5, 
-                    0));
+                // assembly.rb.AddForce(new Vector3(
+                //     Input.GetAxis("Horizontal") * 5, 
+                //     Input.GetAxis("Vertical") * 10, 
+                //     0));
+
+                // Control code
+                foreach (GameObject Part in assembly.PartList)
+                {
+                    properties props = Part.GetComponent<properties>();
+                    if (props.Category == "Control")
+                    {
+                        switch (props.PartType)
+                        {
+                            case "Wheel":
+                                if (props.HingeRef != null)
+                                {
+                                    JointMotor2D m = props.HingeRef.motor;
+                                    if (Input.GetKeyDown(props.Control_Keybinds[0]))
+                                    {
+                                        m.motorSpeed = -500f;
+                                    }
+                                    else
+                                    {
+                                        m.motorSpeed = -0f;
+                                    }
+                                    Part.GetComponent<HingeJoint2D>().motor = m;
+                                }
+                                break;
+                        }
+                    }
+                }
+                
+
                 if (CameraSyncToVehicle)
                 {
                     mainCamera.transform.position = new Vector3(assembly.root.transform.position.x, assembly.root.transform.position.y, -10);

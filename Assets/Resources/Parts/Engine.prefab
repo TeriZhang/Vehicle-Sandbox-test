@@ -127,7 +127,7 @@ BoxCollider2D:
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: cd72fd6d35a5fb74693628f084d94e76, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -155,7 +155,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.23, y: 1.23}
+    oldSize: {x: 1, y: 1}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -176,6 +176,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Category: 
+  ParentAttachpoint:
+    Parent: {fileID: 0}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: 0
+    occupied: {fileID: 0}
   AttachPoints:
   - Parent: {fileID: 0}
     offset: {x: 0, y: 1, z: 0}
@@ -197,3 +202,5 @@ MonoBehaviour:
   Damage: 0
   Health: 250
   Speed: 0
+  Object: {fileID: 0}
+  PivotOffset: {x: 0, y: 0}
