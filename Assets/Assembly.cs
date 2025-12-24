@@ -57,7 +57,7 @@ public class Assembly
         // root.transform.parent = World.transform;
 
         // Freeze(root, true);
-
+        root = rootP;
         rb = rootP.GetComponent<Rigidbody2D>();
         Add(rootP);
     }

@@ -175,7 +175,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab6428980463b64f88bd40ff5c24f39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Category: 
+  Category: Structure
+  ParentAttachpoint:
+    Parent: {fileID: 0}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: 0
+    occupied: {fileID: 0}
   AttachPoints:
   - Parent: {fileID: 0}
     offset: {x: 0.6, y: 0.4, z: 0}
@@ -193,3 +198,7 @@ MonoBehaviour:
   Damage: 0
   Health: 80
   Speed: 0
+  Object: {fileID: 0}
+  PivotOffset: {x: 0, y: 0}
+  PartType: 
+  HingeRef: {fileID: 0}

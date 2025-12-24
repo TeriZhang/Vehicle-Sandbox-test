@@ -18,6 +18,7 @@ using UnityEditor.U2D.Aseprite;
 using Unity.Mathematics;
 using Unity.Properties;
 using System.ComponentModel.Design;
+using System.Threading.Tasks;
 
 public class Global : MonoBehaviour
 {
@@ -47,6 +48,11 @@ public class Global : MonoBehaviour
 
     public GameObject selected;
 
+    public GameObject CombatButton;
+
+    public Sprite CombatGo_Sprite;
+    public Sprite CombatReturn_Sprite;
+
     /// <summary>
     /// Completely freezes a part's RigidBody
     /// </summary>
@@ -71,9 +77,12 @@ public class Global : MonoBehaviour
         temp.transform.position = new Vector2(0, 2);
         temp.transform.parent = World.transform;
 
+        properties props = temp.GetComponent<properties>();
         Freeze(temp, true);
 
         assembly.AddRoot(temp);
+        props.AssemblyRoot = temp;
+
         return temp;
     }
 
@@ -82,12 +91,13 @@ public class Global : MonoBehaviour
         GameObject temp = Instantiate(Resources.Load<GameObject>("Parts/" + name), transform);
         temp.name = name + " " + assembly.PartList.Count;
         temp.transform.position = weldParent.transform.position + (weldParent.transform.rotation * attachPoint.offset);
-        temp.GetComponent<properties>().ParentAttachpoint = attachPoint;
         temp.transform.rotation = Quaternion.Euler(new Vector3(0, 0, attachPoint.rotation + weldParent.transform.rotation.eulerAngles.z));
         temp.transform.parent = weldParent.transform;
         attachPoint.occupied = temp;
         
         properties props = temp.GetComponent<properties>();
+        props.ParentAttachpoint = attachPoint;
+        props.AssemblyRoot = assembly.root;
 
         switch (props.PartType)
         { 
@@ -105,6 +115,8 @@ public class Global : MonoBehaviour
                 motor.maxMotorTorque = 3000;
                 HingeJoint.motor = motor;
                 HingeJoint.connectedBody = temp.transform.Find("Tire").gameObject.GetComponent<Rigidbody2D>();
+
+                HingeJoint.anchor = temp.transform.position - assembly.root.transform.position;
 
                 props.HingeRef = HingeJoint;
 
@@ -205,23 +217,74 @@ public class Global : MonoBehaviour
         return PartP.transform.Find("Physical").gameObject;
     }
 
-    int removeiterate_iterations;
-    public void removeIterate(GameObject PartP)
+    int removeiterate_iterations = 0;
+    public void removeIterate(GameObject PartP, bool destroy)
+    {
+        removeiterate_iterations = 0;
+        removeIteration(PartP, destroy);
+    }
+
+    public void removeIteration(GameObject PartP, bool destroy)
     {
         properties props = PartP.GetComponent<properties>();
+        removeiterate_iterations++;
         foreach (AttachPoint attachPoint in props.AttachPoints)
         {
-            removeiterate_iterations++;
-            if (removeiterate_iterations > assembly.PartList.Count) {break;}
+            if (removeiterate_iterations > assembly.PartList.Count + 10) {break;}
 
             if (attachPoint.occupied)
             {
-                removeIterate(attachPoint.occupied);
+                removeIteration(attachPoint.occupied, destroy);
             }
         }
         assembly.Remove(PartP);
         props.ParentAttachpoint.occupied = null;
-        Destroy(PartP);
+        if (destroy)
+        {
+            Destroy(PartP);
+        }
+    }
+
+    void DamagePart(Collision2D collision, properties attackProps)
+    {
+        GameObject gObject = collision.collider.gameObject;
+        properties props = gObject.GetComponent<properties>();
+        if (props)
+        {
+            // damaging objects
+            Debug.Log(attackProps.Damage);
+            Debug.Log(props.Health);
+            props.Health -= attackProps.Damage;
+            if (props.Health <= 0)
+            {
+                //detached objects
+                gObject.transform.parent = World.transform;
+                gObject.AddComponent<Rigidbody2D>();
+                removeIterate(gObject, false);
+            }
+        }
+    }
+
+    // Block functions
+    async void spikeTouch(Collision2D collision, GameObject Part)
+    {
+        properties propsB = collision.collider.GetComponent<properties>();
+        properties props = Part.GetComponent<properties>();
+        if (propsB != null && propsB.AssemblyRoot != props.AssemblyRoot)
+        {
+            DamagePart(collision, Part.GetComponent<properties>());
+
+            Rigidbody2D rb = propsB.AssemblyRoot.GetComponent<Rigidbody2D>();
+
+            rb.WakeUp();
+            rb.AddForce(new Vector2(
+                    math.sin(collision.otherCollider.transform.rotation.eulerAngles.z) * 200, 
+                    math.cos(collision.otherCollider.transform.rotation.eulerAngles.z) * 200));
+
+            Part.transform.Find("Blade").transform.localPosition = new Vector2(0.8f, 0f);
+            await Task.Delay(1000);
+            Part.transform.Find("Blade").transform.localPosition = new Vector2(0.35f, 0f);
+        }
     }
 
     
@@ -245,6 +308,7 @@ public class Global : MonoBehaviour
             Rigidbody2D rb = ghostPart.GetComponent<Rigidbody2D>();
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             ghostPart.GetComponent<Collider2D>().enabled = false;
+            ghostPart.GetComponent<Collider2D>().enabled = false;
         }
     }
 
@@ -262,6 +326,7 @@ public class Global : MonoBehaviour
     // side menu button
     public void CombatButtonPress()
     {
+        
         switch (gameState)
         {
             case "Building":
@@ -269,7 +334,22 @@ public class Global : MonoBehaviour
                 Freeze(assembly.root, false);
                 assembly.rb.AddForce(new Vector2(0, -100));
                 CameraSyncToVehicle = true;
-                // new Transform().Rotate(0, 90, 0, Space.World);
+
+                // apply spike stuff  0.35 0.8
+
+                foreach (GameObject Part in assembly.PartList)
+                {
+                    properties props = Part.GetComponent<properties>();
+                    switch (props.PartType)
+                    {
+                        case "Spike":
+                            props.onCollisionEnterEvent.AddListener((collision) => spikeTouch(collision, Part));
+                            break;
+                    }
+                }
+
+                CombatButton.GetComponent<Image>().sprite = CombatReturn_Sprite;
+
                 break;
             case "Combat":
                 gameState = "Building";
@@ -278,6 +358,9 @@ public class Global : MonoBehaviour
                 CameraSyncToVehicle = false;
                 Freeze(assembly.root, true);
                 mainCamera.transform.position = new Vector3(0, 2, -10);
+
+                CombatButton.GetComponent<Image>().sprite = CombatGo_Sprite;
+
                 break;
 
         }
@@ -337,12 +420,11 @@ public class Global : MonoBehaviour
                         userActionState = "Idle";
                         props.ParentAttachpoint.occupied = null;
 
-                        // List<GameObject> temp = new List<GameObject>();
-
-                        removeIterate(selected);
+                        removeIterate(selected, true);
                     }
                     break;
                 case "Keybind":
+                    Debug.Log("Keybind down selected");
                     selected = nearestPart();
                     if (selected)
                     {
@@ -372,6 +454,9 @@ public class Global : MonoBehaviour
 
     void Start()
     {
+        CombatGo_Sprite = Resources.Load<Sprite>("Graphics/Combat_Go");
+        CombatReturn_Sprite = Resources.Load<Sprite>("Graphics/Combat_Return");
+
         newVehicle();
 
         Inventory = new List<string>();
@@ -426,15 +511,16 @@ public class Global : MonoBehaviour
                         {
                             if (Input.anyKeyDown)
                             {
+                                // Debug.Log("set attempted");
                                 foreach(KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
                                 {
-                                    if (Input.GetKeyDown(key))
+                                    if (Input.GetKeyDown(key) && key != KeyCode.Mouse0)
                                     {
                                         properties props = selected.GetComponent<properties>();
                                         if (props.PartType == "Wheel")
                                         selected.GetComponent<properties>().Control_Keybinds[0] = key;
                                         Keybind_CheckInput = false;
-                                        Debug.Log("Keybind set: " + key);
+                                        // Debug.Log("Keybind set: " + key);
                                     }
                                 }
                             }
@@ -462,15 +548,19 @@ public class Global : MonoBehaviour
                                 if (props.HingeRef != null)
                                 {
                                     JointMotor2D m = props.HingeRef.motor;
-                                    if (Input.GetKeyDown(props.Control_Keybinds[0]))
+                                    if (Input.GetKey(props.Control_Keybinds[0]))
                                     {
                                         m.motorSpeed = -500f;
+                                    }
+                                    else if(Input.GetKey(props.Control_Keybinds[1]))
+                                    {
+                                        m.motorSpeed = 500f;
                                     }
                                     else
                                     {
                                         m.motorSpeed = -0f;
                                     }
-                                    Part.GetComponent<HingeJoint2D>().motor = m;
+                                    props.HingeRef.motor = m;
                                 }
                                 break;
                         }

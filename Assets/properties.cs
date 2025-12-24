@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class properties : MonoBehaviour
@@ -17,6 +18,8 @@ public class properties : MonoBehaviour
     /// </summary>
     public GameObject Object;
 
+    public GameObject AssemblyRoot;
+
     public Vector2 PivotOffset;
     
     public string PartType;
@@ -26,4 +29,12 @@ public class properties : MonoBehaviour
     {
         return PivotOffset;
     }
+
+    public CollisionUnityEvent onCollisionEnterEvent = new CollisionUnityEvent();
+
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        onCollisionEnterEvent?.Invoke(collision);
+    }
+
 }

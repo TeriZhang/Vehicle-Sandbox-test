@@ -175,7 +175,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab6428980463b64f88bd40ff5c24f39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Category: 
+  Category: Structure
   ParentAttachpoint:
     Parent: {fileID: 0}
     offset: {x: 0, y: 0, z: 0}
@@ -200,7 +200,25 @@ MonoBehaviour:
     occupied: {fileID: 0}
   Control_Keybinds: 
   Damage: 0
-  Health: 250
+  Health: 100
   Speed: 0
   Object: {fileID: 0}
+  AssemblyRoot: {fileID: 0}
   PivotOffset: {x: 0, y: 0}
+  PartType: 
+  HingeRef: {fileID: 0}
+  onCollisionEnterEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: properties, Assembly-CSharp
+        m_MethodName: 
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
