@@ -315,16 +315,21 @@ MonoBehaviour:
     Parent: {fileID: 0}
     offset: {x: 0, y: 0, z: 0}
     rotation: 0
+    autoRotation: 0
     occupied: {fileID: 0}
   AttachPoints: []
   Control_Keybinds: 
   Damage: 30
   Health: 100
   Speed: 0
+  editRotation: 0
+  partOffsetRotation: 90
+  doesAutoRotate: 1
+  hierPath: 
   Object: {fileID: 0}
   AssemblyRoot: {fileID: 0}
   PivotOffset: {x: 0, y: 0}
-  PartType: Spike
+  partType: 4
   HingeRef: {fileID: 0}
   onCollisionEnterEvent:
     m_PersistentCalls:

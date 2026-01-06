@@ -3,15 +3,24 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
+
 public class properties : MonoBehaviour
 {   
     public string Category;
     public AttachPoint ParentAttachpoint;
     public List<AttachPoint> AttachPoints = new List<AttachPoint>();
-    public List<KeyCode> Control_Keybinds = new List<KeyCode>();
+    public List<Keybind> Control_Keybinds = new List<Keybind>();
     public int Damage;
     public int Health;
     public int Speed;
+
+    public float editRotation;
+    // public float[] possibleAngles;
+
+    public float partOffsetRotation;
+    public bool doesAutoRotate;
+
+    public string hierPath = "";
 
     /// <summary>
     /// reference to the GameObject.
@@ -20,12 +29,12 @@ public class properties : MonoBehaviour
 
     public GameObject AssemblyRoot;
 
-    public Vector2 PivotOffset;
+    public Vector2 PivotOffset; // unused
     
-    public string PartType;
+    public PartType partType;
     public HingeJoint2D HingeRef;
 
-    public Vector3 getPosition()
+    public Vector3 getPosition() // unused
     {
         return PivotOffset;
     }

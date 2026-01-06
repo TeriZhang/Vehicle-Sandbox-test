@@ -349,16 +349,25 @@ MonoBehaviour:
     Parent: {fileID: 0}
     offset: {x: 0, y: 0, z: 0}
     rotation: 0
+    autoRotation: 0
     occupied: {fileID: 0}
   AttachPoints: []
-  Control_Keybinds: 6400000061000000
+  Control_Keybinds:
+  - name: Backward
+    key: 97
+  - name: Forward
+    key: 100
   Damage: 0
   Health: 75
   Speed: 5
+  editRotation: 0
+  partOffsetRotation: -180
+  doesAutoRotate: 1
+  hierPath: 
   Object: {fileID: 0}
   AssemblyRoot: {fileID: 0}
   PivotOffset: {x: 0, y: 0}
-  PartType: Wheel
+  partType: 5
   HingeRef: {fileID: 0}
   onCollisionEnterEvent:
     m_PersistentCalls:

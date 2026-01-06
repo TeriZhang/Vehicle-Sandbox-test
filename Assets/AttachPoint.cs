@@ -7,6 +7,7 @@ public class AttachPoint
     public GameObject Parent;
     public Vector3 offset;
     public float rotation;
+    public float autoRotation;
     public GameObject occupied;
 
     public AttachPoint()

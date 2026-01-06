@@ -180,32 +180,41 @@ MonoBehaviour:
     Parent: {fileID: 0}
     offset: {x: 0, y: 0, z: 0}
     rotation: 0
+    autoRotation: 0
     occupied: {fileID: 0}
   AttachPoints:
-  - Parent: {fileID: 0}
+  - Parent: {fileID: 5974881606009750917}
     offset: {x: 0, y: 1, z: 0}
     rotation: 0
+    autoRotation: 0
     occupied: {fileID: 0}
-  - Parent: {fileID: 0}
+  - Parent: {fileID: 5974881606009750917}
     offset: {x: 1, y: 0, z: 0}
     rotation: 0
+    autoRotation: -90
     occupied: {fileID: 0}
-  - Parent: {fileID: 0}
+  - Parent: {fileID: 5974881606009750917}
     offset: {x: 0, y: -1, z: 0}
     rotation: 0
+    autoRotation: -180
     occupied: {fileID: 0}
-  - Parent: {fileID: 0}
+  - Parent: {fileID: 5974881606009750917}
     offset: {x: -1, y: 0, z: 0}
     rotation: 0
+    autoRotation: -270
     occupied: {fileID: 0}
   Control_Keybinds: 
   Damage: 0
   Health: 250
   Speed: 0
+  editRotation: 0
+  partOffsetRotation: 0
+  doesAutoRotate: 0
+  hierPath: 
   Object: {fileID: 0}
   AssemblyRoot: {fileID: 0}
   PivotOffset: {x: 0, y: 0}
-  PartType: 
+  partType: 3
   HingeRef: {fileID: 0}
   onCollisionEnterEvent:
     m_PersistentCalls:
